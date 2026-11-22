@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: vocalsense-speech-emotion
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -b 0.0.0.0:$PORT app.main:app
+    envVars:
+      - key: MODEL_PATH
+        value: models/emotion_model.joblib

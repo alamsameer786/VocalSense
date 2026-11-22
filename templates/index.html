@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<meta name="description" content="VocalSense – AI speech emotion recognition">
+<title>VocalSense — Speech Emotion Recognition</title>
+
+<!-- Favicon = your logo -->
+<link rel="icon" type="image/png" href="/static/img/logo.png">
+<link rel="apple-touch-icon" href="/static/img/logo.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#07111f;--panel:#0d1a2b;--panel2:#101f32;
+  --text:#f4f7fb;--muted:#9aa9bb;--subtle:#62748b;
+  --accent:#66e3c4;--accent2:#7aa7ff;--line:#20334a;--danger:#ff7f8b;
+  --glow:rgba(122,167,255,.14);
+  --shadow:0 24px 70px rgba(0,0,0,.28);--radius:22px;
+}
+html[data-theme="light"]{
+  --bg:#f4f7fb;--panel:#fff;--panel2:#f6f9fc;
+  --text:#102033;--muted:#5d6d80;--subtle:#7b8999;--line:#d9e2ec;
+  --accent:#0f9d83;--accent2:#3b6fe0;--glow:rgba(59,111,224,.10);
+  --shadow:0 20px 50px rgba(24,45,70,.12);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:"DM Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  background:radial-gradient(900px 500px at 12% -5%,var(--glow),transparent 70%),var(--bg);
+  transition:background .25s,color .25s;
+}
+button,input{font:inherit}
+button{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.hidden{display:none!important}
+
+/* ---------- Header ---------- */
+.topbar{
+  position:sticky;top:0;z-index:30;height:72px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 max(20px,6vw);border-bottom:1px solid var(--line);
+  background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:blur(16px);
+}
+.brand{display:flex;align-items:center;gap:12px;color:var(--text);text-decoration:none;
+  font-family:"Space Grotesk",sans-serif;font-size:23px;font-weight:700;letter-spacing:-.6px;min-width:0}
+.brand-logo{
+  flex:0 0 40px;width:40px;height:40px;display:block;
+  object-fit:contain;border-radius:10px;
+}
+.brand-name{white-space:nowrap;line-height:1}
+.brand-accent{color:var(--accent)}
+.top-actions{display:flex;align-items:center;gap:12px}
+.status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;
+  padding:7px 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#f0b24a;box-shadow:0 0 0 4px rgba(240,178,74,.12)}
+.status-dot.ready{background:var(--accent);box-shadow:0 0 0 4px rgba(102,227,196,.14)}
+.status-dot.error{background:var(--danger);box-shadow:0 0 0 4px rgba(255,127,139,.14)}
+.icon-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--panel);
+  color:var(--text);font-size:18px;cursor:pointer;display:grid;place-items:center;transition:.2s}
+.icon-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+
+/* ---------- Layout ---------- */
+main{width:min(1040px,100%);margin:auto;padding:60px 22px 24px}
+.hero{text-align:center;max-width:780px;margin:0 auto 36px}
+.badge{display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-size:12px;font-weight:700;
+  letter-spacing:.14em;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));
+  padding:8px 14px;border-radius:99px;background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 2s infinite}
+.hero h1{margin:20px 0 16px;font-family:"Space Grotesk",sans-serif;
+  font-size:clamp(40px,7vw,70px);line-height:1;letter-spacing:-.05em}
+.hero h1 span{background:linear-gradient(90deg,var(--accent2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{max-width:640px;margin:auto;color:var(--muted);font-size:16px;line-height:1.7}
+.hero-pills{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:22px}
+.hero-pills span{color:var(--muted);font-size:12px;border:1px solid var(--line);padding:8px 12px;border-radius:99px;background:var(--panel)}
+
+.card{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+h2{margin:0 0 8px;font-family:"Space Grotesk",sans-serif}
+.eyebrow{font-size:11px;letter-spacing:.14em;color:var(--accent);font-weight:700}
+
+/* ---------- Workspace ---------- */
+.workspace{overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tab{flex:1;padding:18px;background:none;color:var(--muted);border:0;font-size:14px;font-weight:700;cursor:pointer;transition:.2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--text);background:color-mix(in srgb,var(--accent) 7%,transparent);box-shadow:inset 0 -2px var(--accent)}
+.panel{text-align:center;padding:40px 28px 44px}
+
+/* Recorder */
+.viz-wrap{position:relative;width:min(100%,720px);height:170px;margin:0 auto 18px;border-radius:18px;
+  border:1px solid var(--line);background:color-mix(in srgb,var(--bg) 60%,var(--panel));overflow:hidden}
+.viz-wrap.live{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));
+  box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 8%,transparent)}
+#viz{width:100%;height:100%;display:block}
+.viz-label{position:absolute;left:14px;top:10px;font-size:11px;color:var(--subtle);letter-spacing:.08em}
+.rec-dot{position:absolute;right:14px;top:12px;display:none;align-items:center;gap:6px;font-size:11px;color:var(--danger);font-weight:700}
+.rec-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--danger);animation:blink 1s infinite}
+.viz-wrap.live .rec-dot{display:flex}
+
+.meters{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.meter{min-width:104px;padding:9px 14px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.meter small{display:block;color:var(--subtle);font-size:11px;margin-bottom:2px}
+.meter strong{font-size:18px;font-variant-numeric:tabular-nums}
+
+.rec-row{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:12px}
+.rec-circle{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:#fff;
+  background:linear-gradient(145deg,#122b43,#102036);border:1px solid #29445f;transition:.2s;
+  box-shadow:0 12px 28px rgba(0,0,0,.2)}
+.rec-circle svg{width:34px;height:34px}
+.rec-circle:hover{transform:translateY(-2px) scale(1.03);border-color:var(--accent)}
+.rec-circle.recording{background:linear-gradient(145deg,#8a2c47,#5a1d2f);border-color:#d0607a;
+  box-shadow:0 0 0 10px rgba(255,127,139,.1)}
+.timer{margin:0;font-size:32px;font-weight:600;font-variant-numeric:tabular-nums;min-width:96px;text-align:left}
+.hint{color:var(--muted);font-size:13px;margin:4px 0 0}
+#recordTitle{font-size:20px}
+
+.actions{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+.primary,.secondary,.text-btn{border:0;border-radius:12px;padding:13px 20px;font-weight:700;cursor:pointer;transition:.2s}
+.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04131a}
+.primary:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.06)}
+.primary:disabled{opacity:.35;cursor:not-allowed}
+.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.secondary:hover:not(:disabled){border-color:var(--accent)}
+.secondary:disabled{opacity:.4;cursor:not-allowed}
+.full-btn{width:min(100%,420px)}
+.text-btn{padding:7px 10px;background:none;color:var(--muted)}
+.text-btn:hover{color:var(--accent)}
+.audio-player{width:min(100%,520px);margin:18px auto 0;display:block}
+
+/* Upload */
+.dropzone{min-height:220px;border:1.5px dashed #35506e;border-radius:18px;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;gap:8px;cursor:pointer;background:color-mix(in srgb,var(--bg) 40%,transparent);transition:.2s}
+.dropzone:hover,.dropzone.dragover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.uploadIcon{font-size:34px;color:var(--accent);line-height:1}
+.dropzone span{color:var(--muted)}
+.dropzone small{color:var(--subtle);margin-top:6px}
+.filename{min-height:26px;margin:14px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Result */
+.result,.history{margin-top:22px;padding:28px}
+.resultHead{display:flex;justify-content:space-between;gap:20px;align-items:center}
+.emotion-line{display:flex;align-items:center;gap:14px}
+.emotion-emoji{font-size:48px;line-height:1}
+.result h2{font-size:38px;text-transform:capitalize;margin:4px 0 2px}
+.result-note{color:var(--muted);font-size:13px;margin:0}
+.confidence{text-align:right}
+.confidence span{display:block;color:var(--muted);font-size:12px}
+.confidence strong{font-size:32px}
+.bars{margin-top:24px;display:grid;gap:11px}
+.barRow{display:grid;grid-template-columns:96px 1fr 48px;gap:12px;align-items:center;font-size:13px;text-transform:capitalize}
+.barRow strong{text-align:right;font-variant-numeric:tabular-nums}
+.barRow.top span,.barRow.top strong{color:var(--accent)}
+.track{height:9px;background:color-mix(in srgb,var(--line) 70%,transparent);border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:99px;transition:width .6s ease}
+
+/* History */
+.section-heading{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.history-list{display:grid;gap:8px;margin-top:16px}
+.history-item{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;padding:11px 12px;
+  border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--panel2) 65%,transparent)}
+.history-emoji{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.history-main strong{display:block;text-transform:capitalize}
+.history-main span{font-size:11px;color:var(--muted)}
+.history-score{font-weight:700;color:var(--accent)}
+.empty-history{color:var(--muted);font-size:13px;padding:10px 0}
+
+/* Info */
+.infoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.infoGrid article{background:color-mix(in srgb,var(--panel) 80%,transparent);border:1px solid var(--line);border-radius:18px;padding:22px}
+.infoGrid .step{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;font-weight:700;font-size:14px;
+  color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.infoGrid h3{margin:14px 0 8px}
+.infoGrid p{color:var(--muted);line-height:1.65;font-size:14px;margin:0}
+.disclaimer{text-align:center;color:var(--subtle);font-size:12px;padding:24px 8px 6px;line-height:1.5}
+footer{text-align:center;color:var(--subtle);padding:20px 24px 40px;font-size:12px}
+footer span{margin:0 6px}
+
+/* Settings */
+.settings-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:.25s;z-index:40}
+.settings-panel{position:fixed;right:0;top:0;bottom:0;width:min(380px,92vw);background:var(--panel);border-left:1px solid var(--line);
+  box-shadow:-25px 0 70px rgba(0,0,0,.25);z-index:50;padding:26px;transform:translateX(105%);transition:.28s;overflow:auto;visibility:hidden}
+.settings-open .settings-panel{transform:none;visibility:visible}
+.settings-open .settings-backdrop{opacity:1;pointer-events:auto}
+.settings-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.setting-group{padding:18px 0;border-top:1px solid var(--line)}
+.setting-group>label{display:block;font-size:12px;color:var(--muted);margin-bottom:10px}
+.theme-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.theme-choice{border:1px solid var(--line);border-radius:11px;background:var(--panel2);color:var(--muted);padding:10px 6px;cursor:pointer}
+.theme-choice.active{border-color:var(--accent);color:var(--text);background:color-mix(in srgb,var(--accent) 9%,var(--panel2))}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-top:1px solid var(--line)}
+.setting-row strong{display:block;font-size:14px}
+.setting-row small{display:block;color:var(--muted);font-size:11px;margin-top:4px;line-height:1.4}
+.switch input{display:none}
+.switch .knob{display:block;width:44px;height:25px;border-radius:99px;background:#2a3c50;border:1px solid var(--line);position:relative;cursor:pointer}
+.switch .knob::after{content:"";position:absolute;width:19px;height:19px;left:2px;top:2px;border-radius:50%;background:#c8d2df;transition:.2s}
+.switch input:checked+.knob{background:color-mix(in srgb,var(--accent) 45%,#274c49);border-color:var(--accent)}
+.switch input:checked+.knob::after{left:21px;background:var(--accent)}
+.settings-note{color:var(--subtle);font-size:11px;line-height:1.6;margin-top:18px}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--text);color:var(--bg);
+  padding:11px 16px;border-radius:12px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:80;max-width:min(92vw,520px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+body.compact main{padding-top:36px}
+body.compact .panel{padding:28px 20px}
+body.compact .result,body.compact .history,body.compact .infoGrid article{padding:18px}
+body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+@keyframes blink{50%{opacity:.35}}
+
+@media(max-width:760px){
+  .topbar{height:64px;padding:0 14px}
+  .brand{font-size:20px}.brand-logo{flex-basis:34px;width:34px;height:34px}
+  .status #statusText{display:none}.status{padding:9px}
+  main{padding:40px 14px 20px}
+  .panel{padding:30px 16px}.viz-wrap{height:140px}
+  .result,.history{padding:20px}.result h2{font-size:30px}.emotion-emoji{font-size:38px}
+  .barRow{grid-template-columns:78px 1fr 42px;gap:8px}
+  .infoGrid{grid-template-columns:1fr;gap:10px}
+  .actions button{width:100%;max-width:340px}
+}
+@media(max-width:420px){
+  .resultHead{display:block}.confidence{text-align:left;margin-top:14px}
+  .meter{min-width:92px;padding:8px 10px}
+}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+
+<body>
+<div class="app-shell">
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="VocalSense home">
+      <img class="brand-logo" src="/static/img/logo.png" alt="" width="40" height="40">
+      <span class="brand-name">Vocal<span class="brand-accent">Sense</span></span>
+    </a>
+    <div class="top-actions">
+      <div class="status" title="Backend and model status">
+        <span id="dot" class="status-dot"></span>
+        <span id="statusText">Checking model…</span>
+      </div>
+      <button class="icon-btn" id="settingsButton" aria-label="Open settings" aria-controls="settingsPanel" aria-expanded="false">⚙</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge"><span class="pulse-dot"></span> AI SPEECH ANALYTICS</div>
+      <h1>Hear the emotion <span>behind the voice.</span></h1>
+      <p>Record your voice or upload a WAV file. VocalSense extracts acoustic features and uses machine learning to estimate one of eight speech emotions.</p>
+      <div class="hero-pills"><span>🎙 Live recording</span><span>📈 Real-time waveform</span><span>⚡ Fast inference</span><span>🔒 Local processing</span></div>
+    </section>
+
+    <section class="card workspace" aria-label="Audio analysis workspace">
+      <div class="tabs" role="tablist" aria-label="Audio source">
+        <button class="tab active" role="tab" aria-selected="true" data-tab="record">🎙 Record</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="upload">↑ Upload WAV</button>
+      </div>
+
+      <!-- Record -->
+      <div id="recordPanel" class="panel" role="tabpanel">
+        <div class="viz-wrap" id="vizWrap">
+          <canvas id="viz" aria-label="Live voice waveform"></canvas>
+          <span class="viz-label">VOICE SIGNAL</span>
+          <span class="rec-dot">REC</span>
+        </div>
+
+        <div class="meters" aria-live="off">
+          <div class="meter"><small>Pitch</small><strong id="pitchVal">— Hz</strong></div>
+          <div class="meter"><small>Loudness</small><strong id="volVal">— dB</strong></div>
+          <div class="meter"><small>Note</small><strong id="noteVal">—</strong></div>
+        </div>
+
+        <div class="rec-row">
+          <button class="rec-circle" id="recordButton" aria-label="Start recording">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
+          </button>
+          <p id="timer" class="timer">00:00</p>
+        </div>
+        <h2 id="recordTitle">Click to start recording</h2>
+        <p class="hint">Allow microphone access, then speak naturally for 3–10 seconds (max 30s).</p>
+
+        <div class="actions">
+          <button class="primary" id="analyzeRecorded" disabled>Analyze recording</button>
+          <button class="secondary" id="stopButton" disabled>Stop</button>
+        </div>
+        <audio id="recordedAudio" class="audio-player hidden" controls></audio>
+      </div>
+
+      <!-- Upload -->
+      <div id="uploadPanel" class="panel hidden" role="tabpanel">
+        <label class="dropzone" id="dropzone" for="fileInput">
+          <span class="uploadIcon">↑</span>
+          <strong>Choose a WAV file</strong>
+          <span>or drag and drop it here</span>
+          <small>WAV • maximum 25 MB</small>
+        </label>
+        <input id="fileInput" type="file" accept="audio/wav,.wav" hidden>
+        <div id="fileName" class="filename" aria-live="polite"></div>
+        <audio id="uploadedAudio" class="audio-player hidden" controls></audio>
+        <div class="actions"><button class="primary full-btn" id="analyzeUpload" disabled>Analyze audio</button></div>
+      </div>
+    </section>
+
+    <section id="result" class="card result hidden" aria-live="polite">
+      <div class="resultHead">
+        <div class="emotion-line">
+          <div class="emotion-emoji" id="emotionEmoji">🎧</div>
+          <div>
+            <span class="eyebrow">LATEST PREDICTION</span>
+            <h2 id="emotion">—</h2>
+            <p id="resultNote" class="result-note"></p>
+          </div>
+        </div>
+        <div class="confidence"><span>Confidence</span><strong id="confidence">0%</strong></div>
+      </div>
+      <div class="bars" id="bars"></div>
+    </section>
+
+    <section class="history card" id="historyCard">
+      <div class="section-heading">
+        <div><span class="eyebrow">SESSION</span><h2>Recent predictions</h2></div>
+        <button class="text-btn" id="clearHistory">Clear</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+
+    <section class="infoGrid">
+      <article><div class="step">1</div><h3>Record or upload</h3><p>Use your microphone or select a WAV file from your device.</p></article>
+      <article><div class="step">2</div><h3>Feature extraction</h3><p>Librosa converts speech into acoustic features including MFCCs and spectral information.</p></article>
+      <article><div class="step">3</div><h3>ML prediction</h3><p>A Random Forest classifier predicts one of eight RAVDESS emotion classes.</p></article>
+    </section>
+
+    <section class="disclaimer">⚠ Educational/research project only. Emotion predictions are estimates and are not a clinical or psychological diagnosis.</section>
+  </main>
+
+  <footer>VocalSense <span>•</span> Speech Emotion Recognition <span>•</span> Flask + Python + Machine Learning</footer>
+</div>
+
+<!-- Settings -->
+<aside class="settings-panel" id="settingsPanel" aria-hidden="true" aria-label="Settings">
+  <div class="settings-head">
+    <div><span class="eyebrow">PREFERENCES</span><h2>Settings</h2></div>
+    <button class="icon-btn" id="closeSettings" aria-label="Close settings">×</button>
+  </div>
+  <div class="setting-group">
+    <label>Theme</label>
+    <div class="theme-options" role="group" aria-label="Theme">
+      <button data-theme-choice="dark" class="theme-choice">🌙 Dark</button>
+      <button data-theme-choice="light" class="theme-choice">☀ Light</button>
+      <button data-theme-choice="system" class="theme-choice">💻 System</button>
+    </div>
+  </div>
+  <div class="setting-row"><div><strong>Compact layout</strong><small>Reduce spacing for smaller screens.</small></div>
+    <label class="switch"><input id="compactToggle" type="checkbox"><span class="knob"></span></label></div>
+  <div class="setting-row"><div><strong>Reduced motion</strong><small>Minimize interface animations.</small></div>
+    <label class="switch"><input id="motionToggle" type="checkbox"><span class="knob"></span></label></div>
+  <div class="setting-row"><div><strong>Save session history</strong><small>Keep recent results in this browser only.</small></div>
+    <label class="switch"><input id="historyToggle" type="checkbox" checked><span class="knob"></span></label></div>
+  <button class="secondary full-btn" id="resetSettings">Reset settings</button>
+  <p class="settings-note">Settings are stored locally in your browser and do not change the trained model.</p>
+</aside>
+<div class="settings-backdrop" id="settingsBackdrop"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+/* ---------- Safe storage ---------- */
+const store = {
+  get(k, d){ try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} }
+};
+
+/* ---------- State ---------- */
+let rec = null, recordedBlob = null, startAt = 0, timerId = null, vizId = null, audioURL = null;
+const MAX_SECONDS = 30;
+const EMOJI = {neutral:"😐",calm:"😌",happy:"😊",sad:"😔",angry:"😠",fearful:"😨",disgust:"🤢",surprised:"😮"};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- Settings ---------- */
+const SETTINGS_KEY = "vocalsense-settings-v2", HISTORY_KEY = "vocalsense-history";
+const defaults = {theme:"dark", compact:false, reduceMotion:false, saveHistory:true};
+let settings = {...defaults, ...store.get(SETTINGS_KEY, {})};
+
+const systemTheme = () => matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+
+function applySettings(){
+  const theme = settings.theme === "system" ? systemTheme() : settings.theme;
+  document.documentElement.dataset.theme = theme;
+  document.body.classList.toggle("compact", !!settings.compact);
+  document.body.classList.toggle("reduce-motion", !!settings.reduceMotion);
+  $("#compactToggle").checked = !!settings.compact;
+  $("#motionToggle").checked = !!settings.reduceMotion;
+  $("#historyToggle").checked = !!settings.saveHistory;
+  $$("[data-theme-choice]").forEach(b => b.classList.toggle("active", b.dataset.themeChoice === settings.theme));
+  $('meta[name="theme-color"]').setAttribute("content", theme === "light" ? "#f4f7fb" : "#07111f");
+  store.set(SETTINGS_KEY, settings);
+  if (!rec || rec.state !== "recording") drawIdle();
+}
+
+function openSettings(){
+  document.body.classList.add("settings-open");
+  $("#settingsPanel").setAttribute("aria-hidden","false");
+  $("#settingsButton").setAttribute("aria-expanded","true");
+  $("#closeSettings").focus();
+}
+function closeSettings(){
+  document.body.classList.remove("settings-open");
+  $("#settingsPanel").setAttribute("aria-hidden","true");
+  $("#settingsButton").setAttribute("aria-expanded","false");
+  $("#settingsButton").focus();
+}
+$("#settingsButton").onclick = openSettings;
+$("#closeSettings").onclick = closeSettings;
+$("#settingsBackdrop").onclick = closeSettings;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSettings(); });
+
+$$("[data-theme-choice]").forEach(b => b.onclick = () => {
+  settings.theme = b.dataset.themeChoice; applySettings(); showToast(`Theme: ${settings.theme}`);
+});
+$("#compactToggle").onchange = e => { settings.compact = e.target.checked; applySettings(); };
+$("#motionToggle").onchange = e => { settings.reduceMotion = e.target.checked; applySettings(); };
+$("#historyToggle").onchange = e => {
+  settings.saveHistory = e.target.checked; applySettings();
+  if (!settings.saveHistory) store.del(HISTORY_KEY);
+  renderHistory();
+};
+$("#resetSettings").onclick = () => { settings = {...defaults}; applySettings(); showToast("Settings reset."); };
+matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", () => { if (settings.theme === "system") applySettings(); });
+
+/* ---------- API health ---------- */
+async function checkHealth(){
+  const dot = $("#dot"), txt = $("#statusText");
+  try {
+    const d = await (await fetch("/api/health")).json();
+    txt.textContent = d.model_loaded ? "Model ready" : "Model not trained";
+    dot.className = "status-dot " + (d.model_loaded ? "ready" : "");
+  } catch {
+    txt.textContent = "API unavailable"; dot.className = "status-dot error";
+  }
+}
+
+/* ---------- Tabs ---------- */
+$$(".tab").forEach(btn => btn.onclick = () => {
+  $$(".tab").forEach(t => { t.classList.remove("active"); t.setAttribute("aria-selected","false"); });
+  btn.classList.add("active"); btn.setAttribute("aria-selected","true");
+  const isRec = btn.dataset.tab === "record";
+  $("#recordPanel").classList.toggle("hidden", !isRec);
+  $("#uploadPanel").classList.toggle("hidden", isRec);
+  if (isRec) { sizeCanvas(); drawIdle(); }
+});
+
+/* ---------- Helpers ---------- */
+const formatTime = ms => {
+  const s = Math.floor(ms/1000);
+  return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
+};
+
+function mergeBuffers(parts){
+  const out = new Float32Array(parts.reduce((n,p) => n + p.length, 0));
+  let o = 0; for (const p of parts){ out.set(p, o); o += p.length; }
+  return out;
+}
+
+function encodeWav(samples, rate){
+  const buf = new ArrayBuffer(44 + samples.length*2), v = new DataView(buf);
+  const str = (o,s) => { for (let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); };
+  str(0,"RIFF"); v.setUint32(4, 36 + samples.length*2, true); str(8,"WAVE"); str(12,"fmt ");
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,rate,true); v.setUint32(28,rate*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
+  str(36,"data"); v.setUint32(40, samples.length*2, true);
+  let o = 44;
+  for (const s of samples){
+    const x = Math.max(-1, Math.min(1, s));
+    v.setInt16(o, x < 0 ? x*32768 : x*32767, true); o += 2;
+  }
+  return buf;
+}
+
+/* ---------- Pitch detection (autocorrelation) ---------- */
+function detectPitch(buf, rate){
+  const n = buf.length; let rms = 0;
+  for (let i=0;i<n;i++) rms += buf[i]*buf[i];
+  rms = Math.sqrt(rms/n);
+  if (rms < 0.012) return {pitch:0, rms};
+  const minLag = Math.floor(rate/500), maxLag = Math.floor(rate/70);
+  let best = -1, bestLag = 0;
+  for (let lag=minLag; lag<=maxLag; lag++){
+    let sum = 0;
+    for (let i=0;i<n-lag;i+=2) sum += buf[i]*buf[i+lag];
+    if (sum > best){ best = sum; bestLag = lag; }
+  }
+  let energy = 0; for (let i=0;i<n;i+=2) energy += buf[i]*buf[i];
+  return {pitch: best/energy > 0.45 ? rate/bestLag : 0, rms};
+}
+const NOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const noteName = hz => { const m = Math.round(12*Math.log2(hz/440)+69); return NOTES[m%12] + (Math.floor(m/12)-1); };
+
+/* ---------- Live visualizer ---------- */
+const canvas = $("#viz"), cctx = canvas.getContext("2d");
+let cw = 0, ch = 0;
+
+function sizeCanvas(){
+  const r = canvas.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+  if (!r.width) return;
+  cw = r.width; ch = r.height;
+  canvas.width = cw*dpr; canvas.height = ch*dpr;
+  cctx.setTransform(dpr,0,0,dpr,0,0);
+}
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function drawIdle(){
+  if (!cw) sizeCanvas();
+  if (!cw) return;
+  cctx.clearRect(0,0,cw,ch);
+  cctx.strokeStyle = cssVar("--line"); cctx.lineWidth = 1;
+  cctx.beginPath(); cctx.moveTo(0,ch/2); cctx.lineTo(cw,ch/2); cctx.stroke();
+  const a = cssVar("--accent2");
+  cctx.fillStyle = a; cctx.globalAlpha = .35;
+  const bars = Math.floor(cw/9);
+  for (let i=0;i<bars;i++){
+    const h = 3 + 2*Math.sin(i*.5);
+    cctx.fillRect(i*9+2, ch/2-h/2, 4, h);
+  }
+  cctx.globalAlpha = 1;
+}
+
+function startViz(analyser, rate){
+  const time = new Float32Array(analyser.fftSize);
+  const freq = new Uint8Array(analyser.frequencyBinCount);
+  let lastMeter = 0, smooth = 0;
+  sizeCanvas();
+
+  const frame = now => {
+    vizId = requestAnimationFrame(frame);
+    analyser.getFloatTimeDomainData(time);
+    analyser.getByteFrequencyData(freq);
+
+    const accent = cssVar("--accent"), accent2 = cssVar("--accent2");
+    cctx.clearRect(0,0,cw,ch);
+
+    // Frequency bars (mirrored from the centre line)
+    const bars = Math.floor(cw/9), usable = Math.floor(freq.length*0.45);
+    const grad = cctx.createLinearGradient(0,0,cw,0);
+    grad.addColorStop(0, accent2); grad.addColorStop(1, accent);
+    cctx.fillStyle = grad;
+    for (let i=0;i<bars;i++){
+      const v = freq[Math.floor(i/bars*usable)]/255;
+      const h = Math.max(3, v*(ch*.46));
+      cctx.globalAlpha = .28 + v*.6;
+      cctx.fillRect(i*9+2, ch/2-h, 4, h);
+      cctx.fillRect(i*9+2, ch/2, 4, h);
+    }
+    cctx.globalAlpha = 1;
+
+    // Time-domain waveform
+    cctx.lineWidth = 2; cctx.strokeStyle = accent; cctx.lineJoin = "round";
+    cctx.shadowColor = accent; cctx.shadowBlur = 8;
+    cctx.beginPath();
+    const step = Math.ceil(time.length/cw);
+    for (let x=0;x<cw;x++){
+      const y = ch/2 + time[Math.min(time.length-1, Math.floor(x*time.length/cw))]*ch*.9;
+      x ? cctx.lineTo(x,y) : cctx.moveTo(x,y);
+    }
+    cctx.stroke(); cctx.shadowBlur = 0;
+
+    // Meters (throttled)
+    if (now - lastMeter > 90){
+      lastMeter = now;
+      const {pitch, rms} = detectPitch(time, rate);
+      const db = rms > 0 ? Math.max(-60, 20*Math.log10(rms)) : -60;
+      $("#volVal").textContent = Math.round(db) + " dB";
+      if (pitch){
+        smooth = smooth ? smooth*.6 + pitch*.4 : pitch;
+        $("#pitchVal").textContent = Math.round(smooth) + " Hz";
+        $("#noteVal").textContent = noteName(smooth);
+      } else { smooth = 0; $("#pitchVal").textContent = "— Hz"; $("#noteVal").textContent = "—"; }
+    }
+  };
+  vizId = requestAnimationFrame(frame);
+}
+
+function stopViz(){
+  cancelAnimationFrame(vizId); vizId = null;
+  $("#pitchVal").textContent = "— Hz"; $("#volVal").textContent = "— dB"; $("#noteVal").textContent = "—";
+  drawIdle();
+}
+addEventListener("resize", () => { sizeCanvas(); if (!vizId) drawIdle(); });
+
+/* ---------- Recording ---------- */
+function setRecordingUI(on){
+  $("#recordButton").classList.toggle("recording", on);
+  $("#vizWrap").classList.toggle("live", on);
+  $("#recordButton").setAttribute("aria-label", on ? "Stop recording" : "Start recording");
+  $("#stopButton").disabled = !on;
+}
+
+function stopRecording(){
+  if (!rec || rec.state !== "recording") return;
+  rec.state = "stopped";
+  clearInterval(timerId);
+  rec.processor.disconnect(); rec.source.disconnect(); rec.analyser.disconnect();
+  rec.stream.getTracks().forEach(t => t.stop());
+  const wav = encodeWav(mergeBuffers(rec.samples), rec.sampleRate);
+  recordedBlob = new Blob([wav], {type:"audio/wav"});
+  if (audioURL) URL.revokeObjectURL(audioURL);
+  audioURL = URL.createObjectURL(recordedBlob);
+  $("#recordedAudio").src = audioURL;
+  $("#recordedAudio").classList.remove("hidden");
+  rec.ctx.close();
+  stopViz(); setRecordingUI(false);
+  $("#recordTitle").textContent = "Recording ready";
+  $("#analyzeRecorded").disabled = false;
+}
+
+async function startRecording(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}});
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    await ctx.resume();
+    const source = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048; analyser.smoothingTimeConstant = .75;
+    const processor = ctx.createScriptProcessor(4096,1,1);
+    const samples = [];
+    processor.onaudioprocess = e => samples.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+    source.connect(analyser); source.connect(processor); processor.connect(ctx.destination);
+
+    rec = {stream, ctx, processor, source, analyser, samples, sampleRate: ctx.sampleRate, state:"recording"};
+    startAt = Date.now();
+    $("#timer").textContent = "00:00";
+    timerId = setInterval(() => {
+      const el = Date.now() - startAt;
+      $("#timer").textContent = formatTime(el);
+      if (el >= MAX_SECONDS*1000){ stopRecording(); showToast("Maximum length reached (30s)."); }
+    }, 100);
+
+    setRecordingUI(true);
+    $("#recordTitle").textContent = "Recording… click stop when finished";
+    $("#analyzeRecorded").disabled = true;
+    $("#recordedAudio").classList.add("hidden");
+    startViz(analyser, ctx.sampleRate);
+  } catch (err) {
+    showToast("Microphone access failed: " + err.message);
+  }
+}
+
+$("#recordButton").onclick = () => (rec && rec.state === "recording") ? stopRecording() : startRecording();
+$("#stopButton").onclick = stopRecording;
+$("#analyzeRecorded").onclick = () => { if (recordedBlob) analyze(recordedBlob, "recording.wav"); };
+
+/* ---------- Upload ---------- */
+const input = $("#fileInput"), dropzone = $("#dropzone");
+
+function setFile(file){
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith(".wav")) return showToast("Please choose a WAV file.");
+  if (file.size > 25*1024*1024) return showToast("File is larger than 25 MB.");
+  const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+  $("#fileName").textContent = file.name;
+  $("#analyzeUpload").disabled = false;
+  $("#uploadedAudio").src = URL.createObjectURL(file);
+  $("#uploadedAudio").classList.remove("hidden");
+}
+input.onchange = () => setFile(input.files[0]);
+["dragenter","dragover"].forEach(n => dropzone.addEventListener(n, e => { e.preventDefault(); dropzone.classList.add("dragover"); }));
+["dragleave","drop"].forEach(n => dropzone.addEventListener(n, e => { e.preventDefault(); dropzone.classList.remove("dragover"); }));
+dropzone.addEventListener("drop", e => setFile(e.dataTransfer.files[0]));
+$("#analyzeUpload").onclick = () => { const f = input.files[0]; if (f) analyze(f, f.name); };
+
+/* ---------- Analysis ---------- */
+async function analyze(blob, name){
+  const fd = new FormData(); fd.append("audio", blob, name);
+  setBusy(true); showToast("Analyzing audio…");
+  try {
+    const res = await fetch("/api/predict", {method:"POST", body:fd});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Prediction failed.");
+    showResult(data);
+  } catch (err) { showToast(err.message); }
+  finally { setBusy(false); }
+}
+
+function setBusy(busy){
+  $$("button").forEach(b => {
+    if (b.id === "recordButton" || b.id === "stopButton" || b.classList.contains("tab") || b.classList.contains("icon-btn") || b.classList.contains("theme-choice")) return;
+    if (busy) b.dataset.was = b.disabled ? "1" : "";
+    b.disabled = busy ? true : b.dataset.was === "1";
+  });
+}
+
+function showResult(data){
+  $("#result").classList.remove("hidden");
+  $("#emotion").textContent = data.emotion;
+  $("#emotionEmoji").textContent = EMOJI[data.emotion] || "🎧";
+  $("#confidence").textContent = Math.round(data.confidence*100) + "%";
+  $("#resultNote").textContent = `Predicted from ${data.emotion} acoustic patterns.`;
+
+  const bars = $("#bars"); bars.innerHTML = "";
+  Object.entries(data.probabilities).sort((a,b) => b[1]-a[1]).forEach(([emo, p], i) => {
+    const row = document.createElement("div");
+    row.className = "barRow" + (i === 0 ? " top" : "");
+    row.innerHTML = `<span>${esc(emo)}</span><div class="track"><div class="fill"></div></div><strong>${Math.round(p*100)}%</strong>`;
+    bars.appendChild(row);
+    requestAnimationFrame(() => requestAnimationFrame(() => row.querySelector(".fill").style.width = (p*100) + "%"));
+  });
+
+  saveHistory(data); renderHistory();
+  $("#result").scrollIntoView({behavior: settings.reduceMotion ? "auto" : "smooth", block:"center"});
+}
+
+/* ---------- History ---------- */
+function saveHistory(data){
+  if (!settings.saveHistory) return;
+  const h = store.get(HISTORY_KEY, []);
+  h.unshift({emotion:data.emotion, confidence:data.confidence,
+    time:new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})});
+  store.set(HISTORY_KEY, h.slice(0,8));
+}
+
+function renderHistory(){
+  const h = settings.saveHistory ? store.get(HISTORY_KEY, []) : [];
+  $("#historyList").innerHTML = h.length
+    ? h.map(i => `<div class="history-item">
+        <div class="history-emoji">${EMOJI[i.emotion] || "🎧"}</div>
+        <div class="history-main"><strong>${esc(i.emotion)}</strong><span>${esc(i.time)}</span></div>
+        <div class="history-score">${Math.round(i.confidence*100)}%</div></div>`).join("")
+    : `<div class="empty-history">Your recent predictions will appear here.</div>`;
+}
+$("#clearHistory").onclick = () => { store.del(HISTORY_KEY); renderHistory(); showToast("History cleared."); };
+
+/* ---------- Toast ---------- */
+function showToast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+/* ---------- Init ---------- */
+applySettings();
+renderHistory();
+checkHealth();
+sizeCanvas(); drawIdle();
+</script>
+</body>
+</html>
